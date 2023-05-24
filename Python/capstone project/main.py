@@ -164,20 +164,15 @@ def delete():
     with open(file_name, 'r') as file:
         reader = csv.reader(file)
         rows = list(reader)
+        print(rows)
     for row in rows:
         if row[1] == search_email:
-            validation = 1
+            rows.remove(row)
+            with open(file_name, 'w', newline='') as file:
+                adder = csv.writer(file)
+                adder.writerows(rows)
+            print("Contact has been  deleted Successfully")
             break
-        else:
-            validation = 0
-    if validation == 1:
-        for row in rows:
-            if row[1] == search_email:
-                rows.remove(row)
-                with open(file_name, 'w', newline='') as file:
-                    adder = csv.writer(file)
-                    adder.writerows(rows)
-                print("Contact has been  deleted Successfully")
     else:
         print("This Email doesn't exist in the file !")
 
