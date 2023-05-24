@@ -1,195 +1,182 @@
-# import modules
 from datetime import datetime
 import csv
-from email_validator import validate_email, EmailNotValidError
 import os.path
+from email_validator import validate_email, EmailNotValidError
 
-# get current date and time
-current_date = datetime.now().strftime("%Y-%m-%d")
-# convert datetime obj to string
-str_current_date = str(current_date)
-# create a file object along with extension
-file_name = "ContactBook_" + str_current_date + ".csv"
+# Define constants
+DATE_FORMAT = "%Y-%m-%d"
+FILE_EXTENSION = ".csv"
+FIELDNAMES = ['User-name', 'Email', 'Phone number', 'Address']
+
+# Get current date and time
+current_date = datetime.now().strftime(DATE_FORMAT)
+
+# Create a file object with current date in the filename
+filename = f"ContactBook_{current_date}{FILE_EXTENSION}"
+
+# Check if file already exists
+file_exists = os.path.isfile(filename)
 
 
-# This function reads contacts information from user and validate them
-# then send them to the writer function.
-def contact_info():
-    # reading username from the user
+def is_unique_username(username):
+    """Check if username is unique."""
+    if file_exists:
+        with open(filename, 'r') as file:
+            reader = csv.reader(file)
+            for row in reader:
+                if row[0] == username:
+                    print("This username is already taken !")
+                    return False
+    return True
+
+
+def is_unique_email(email):
+    """Check if email is unique."""
+    try:
+        email = validate_email(email).email
+    except EmailNotValidError as e:
+        print(str(e))
+        return False
+
+    if file_exists:
+        with open(filename, 'r') as file:
+            reader = csv.reader(file)
+            for row in reader:
+                if row[1] == email:
+                    print("This email already exists !")
+                    return False
+    return True
+
+
+def get_phone_number():
+    """Get phone number from user and validate it."""
+    while True:
+        try:
+            phone_number = int(input('Please enter your phone number : '))
+            if len(str(phone_number)) != 10:
+                print('Invalid mobile number.')
+            else:
+                return phone_number
+        except ValueError:
+            print('Please enter a valid integer!')
+
+
+def get_address():
+    """Get address from user."""
+    return input('Please enter your address : ')
+
+
+def add_contact():
+    """Add a new contact to the file."""
     while True:
         user_name = input('Please enter your username : ')
-        # checking if the csv file exists or not
-        path = f'./ContactBook_{str_current_date}.csv'
-        check_file = os.path.isfile(path)
-        # checking whether this username is used or not
-        if check_file:
-            with open(file_name, 'r') as file:
-                reader = csv.reader(file)
-                rows = list(reader)
-            for row in rows:
-                if row[0] == user_name:
-                    print("This username is already taken !")
-                    break
-            else:
-                break
-        else:
+        if is_unique_username(user_name):
             break
 
     while True:
         email = input('Please enter your email : ')
-        try:
-            email = validate_email(email).email
-            # checking if the file already exists
-            if check_file:
-                # checking if the email already exists
-                with open(file_name, 'r') as file:
-                    reader = csv.reader(file)
-                    rows = list(reader)
-                for row in rows:
-                    if row[1] == email:
-                        print("This email already exists !")
-                        break
-                else:
-                    break
-            else:
-                break
-        except EmailNotValidError as e:
-            print(str(e))
+        if is_unique_email(email):
+            break
 
-    # reading the phone numer
+    phone_number = get_phone_number()
+    address = get_address()
+
+    # save contact information in a list
+    row = [user_name, email, phone_number, address]
+
+    # write contact information to file
+    with open(filename, 'a', newline='') as file:
+        writer = csv.writer(file)
+        if not file_exists:
+            writer.writerow(FIELDNAMES)
+        writer.writerow(row)
+    print('Contact has been added successfully')
+
+
+def update_contact():
+    """Update an existing contact in the file."""
+    with open(filename, 'r', newline='') as file:
+        reader = csv.DictReader(file)
+        rows = list(reader)
+
+    print('Contacts:')
+    for i, row in enumerate(rows):
+        print(f"{i + 1}) {row['Email']}")
+    print('0) Exit')
+
     while True:
-        # validating that all entries are integer numbers
         try:
-            phone_number = int(input('Please enter your phone number : '))
-            # validating that the number consists of 10 digits
-            if len(str(phone_number)) != 10:
-                print('Invalid mobile number.')
-            else:
+            row_index = int(input('Enter the number of the contact you want to update: '))
+            if row_index == 0:
                 break
-        # validate that the user entered an integer
+            elif row_index < 1 or row_index > len(rows):
+                print('Invalid choice')
+                continue
+            print('Fields:')
+            for i, fieldname in enumerate(FIELDNAMES):
+                print(f"{i + 1}) {fieldname}")
+            print('0) Exit')
+            field_index = int(input('Enter the number of the field you want to update: '))
+            if field_index == 0:
+                break
+            elif field_index < 1 or field_index > len(FIELDNAMES):
+                print('Invalid choice')
+                continue
+            new_value = input(f'Enter the new {FIELDNAMES[field_index - 1]}: ')
+            rows[row_index - 1][FIELDNAMES[field_index- 1]] = new_value
+            break
         except ValueError:
             print('Please enter a valid integer!')
-    # reading the address
-    address = input('Please enter your address : ')
 
-    # saving contact information in a list
-    rows = [[user_name, email, phone_number, address]]
-    # field names
-    fields = ['User-name', 'Email', 'Phone number', 'Address']
-    # calling the writer function to save contact information in the file.
-    writer(fields, rows, file_name, "write")
+    # write updated contact information to file
+    with open(filename, 'w', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=FIELDNAMES)
+        writer.writeheader()
+        writer.writerows(rows)
+    print('Contact has been updated successfully')
 
 
-# This function saves contact information in the csv file and updates the existed ones.
-def writer(header, data, filename, option):
-    if option == "write":
-        path = f'./ContactBook_{str_current_date}.csv'
-        check_file = os.path.isfile(path)
-        # Checking if the file exists so we write column names once.
-        if not check_file:
-            with open(filename, "w", newline="") as csvfile:
-                m = csv.writer(csvfile)
-                m.writerow(header)
-                for x in data:
-                    m.writerow(x)
-                    print('Contact has been added successfully')
-        # If file already exists do not rewrite column names
-        else:
-            with open(filename, "a", newline="") as csvfile:
-                movies = csv.writer(csvfile)
-                for x in data:
-                    movies.writerow(x)
-                    print('Contact is added successfully')
-
-    # updating existed contacts
-    elif option == "update":
-        with open(filename, "w", newline="") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=header)
-            writer.writeheader()
-            writer.writerows(data)
-            print('Contact has been updated successfully')
-
-    else:
-        print("Option is not known")
-
-
-# This function updates existed contacts
-def update():
-    with open(file_name, newline="") as file:
-        readData = [row for row in csv.DictReader(file)]
-        # choosing the number of field and row user wants to update.
-        while True:
-            print('fields = [1)User-name, 2)Email, 3)Phone number, 4)Address 0)exit]')
-
-            try:
-                n = int(input('Please enter the number of the field you want to update or enter 0 to exit : '))
-                with open(f"./{file_name}", 'r') as file:
-                    csvreader = csv.reader(file)
-                    for row in csvreader:
-                        print(row)
-                x = int(input('Please enter the number of the row you want to update : '))
-                if n == 1:
-                    readData[x]['User-name'] = input('Please enter the new username : ')
-                    print(readData[x])
-                    break
-                elif n == 2:
-                    readData[x]['Email'] = input('Please enter the new email: ')
-                    print(readData[x])
-                    break
-                elif n == 3:
-                    readData[x]['Phone number'] = input('Please enter the new phone number : ')
-                    print(readData[x])
-                    break
-                elif n == 4:
-                    readData[x]['Address'] = input('Please enter the new Address : ')
-                    print(readData[x])
-                    break
-                elif n == 0:
-                    break
-
-                else:
-                    print('Invalid choice')
-            except Exception as error:
-                print(error)
-
-    readHeader = readData[x].keys()
-    # Calling the writer function to write updates to the file.
-    writer(readHeader, readData, file_name, "update")
-
-
-# This function deletes existed contacts using emails
-def delete():
-    search_email = input("Enter The Email for the contact You Want To delete: ")
-
-    with open(file_name, 'r') as file:
+def delete_contact():
+    """Delete an existing contact from the file."""
+    email = input('Enter the email for the contact you want to delete: ')
+    with open(filename, 'r', newline='') as file:
         reader = csv.reader(file)
         rows = list(reader)
-        print(rows)
-    for row in rows:
-        if row[1] == search_email:
-            rows.remove(row)
-            with open(file_name, 'w', newline='') as file:
-                adder = csv.writer(file)
-                adder.writerows(rows)
-            print("Contact has been  deleted Successfully")
+
+    row_deleted = False
+    for i, row in enumerate(rows):
+        if row[1] == email:
+            rows.pop(i)
+            row_deleted = True
             break
-    else:
-        print("This Email doesn't exist in the file !")
+    if not row_deleted:
+        print("This email doesn't exist in the file!")
+        return
+
+    # write updated contact information to file
+    with open(filename, 'w', newline='') as file:
+        writer = csv.writer(file)
+        for row in rows:
+            writer.writerow(row)
+    print('Contact has been deleted successfully')
 
 
-# calling functions according to user choice.
-Choices = ['1) Add Contact', '2) Update Contact', '3) Delete Contact', '0) exit']
+# Main loop
 while True:
-    for i in Choices:
-        print(i)
-    choice = input('Please enter the number of your choice : ')
+    print('Menu:')
+    print('1) Add Contact')
+    print('2) Update Contact')
+    print('3) Delete Contact')
+    print('0) Exit')
+    choice = input('Please enter the number of your choice: ')
+
     if choice == '1':
-        contact_info()
+        add_contact()
     elif choice == '2':
-        update()
+        update_contact()
     elif choice == '3':
-        delete()
+        delete_contact()
     elif choice == '0':
         break
     else:
-        print('Please enter valid number : ')
+        print('Please enter a valid number.')
