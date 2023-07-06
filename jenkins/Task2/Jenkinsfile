@@ -1,24 +1,16 @@
-@Library('MySharedLibrary') _
+@Library('my-shared-library') _
 
 pipeline {
   agent any
   
-  environment {
-    APP_VERSION = '1.0.0'
-  }
-  
   parameters {
     string(name: 'NAME', defaultValue: 'Jenkins', description: 'Your name')
-    booleanParam(name: 'GREET', defaultValue: true, description: 'Greet?')
   }
   
   stages {
-    stage('Building') {
-      when { expression { params.GREET } }
+    stage('Greeting') {
       steps {
-        script {
-          mySharedLibrary.build()
-        }
+        myStep(name: params.NAME)
       }
     }
   }
