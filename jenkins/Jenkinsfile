@@ -11,18 +11,10 @@ pipeline {
   }
   
   stages {
-    stage('Greeting') {
+    stage('Building') {
       when { expression { params.GREET } }
       steps {
         echo "Hello, ${params.NAME}!"
-      }
-    }
-    
-    stage('Build') {
-      steps {
-        echo "Building version ${env.APP_VERSION}..."
-        sh './build.sh'
-        
       }
     }
   }
