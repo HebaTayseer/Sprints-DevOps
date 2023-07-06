@@ -1,3 +1,5 @@
+@Library('MySharedLibrary') _
+
 pipeline {
   agent any
   
@@ -14,7 +16,9 @@ pipeline {
     stage('Building') {
       when { expression { params.GREET } }
       steps {
-        echo "Hello, ${params.NAME}!"
+        script {
+          mySharedLibrary.build()
+        }
       }
     }
   }
