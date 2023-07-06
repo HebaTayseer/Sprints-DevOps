@@ -21,7 +21,8 @@ pipeline {
     stage('Build') {
       steps {
         echo "Building version ${env.APP_VERSION}..."
-        sh 'mvn clean package'
+        sh './build.sh'
+        
       }
     }
   }
