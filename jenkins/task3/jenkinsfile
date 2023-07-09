@@ -1,0 +1,36 @@
+pipeline {
+    agent { label 'ec2-slave' }
+    stages {
+        stage("Build") {
+            steps {
+                echo "Build stage."
+            }
+            post {
+                always {
+                    echo "This block always runs after this stage."
+                }
+            }
+        }
+        stage("Test") {
+            steps {
+                echo "Test stage."
+            }
+            post {
+                unstable {
+                    echo "This block runs when the status of this stage is marked unstable."
+                }
+            }
+        }
+        stage("Release") {
+            steps {
+                echo "Release stage."
+            }
+            post {
+                success {
+                    echo "This block runs when the stage succeeded."
+                }
+            }
+        }
+    }
+
+}
