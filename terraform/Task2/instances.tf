@@ -23,7 +23,7 @@ resource"aws_instance" "public_ec2" {
   }
 }
 
-# Create private EC2 instance with MySQL
+# Create private EC2 instance with Apache
 resource "aws_instance" "private_ec2" {
   ami           = var.ami_id
   instance_type = var.instance_type
