@@ -1,0 +1,4 @@
+postgres_user_password: "new-password"
+sonarqube_user_password: "new-password"
+sonarqube_version: '9.9.1.69595'
+sonar_user_password: "mySonarPassword"

@@ -1,0 +1,8 @@
+- name: Install and configure Sonarqube
+  hosts: sonarqube
+  become: true
+  become_method: sudo
+  become_user: root
+  roles:
+    - sonarqube-role
+    
